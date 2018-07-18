@@ -1,18 +1,44 @@
-hhm.readout <- function(file, type = c("prec", "temp")) {
+hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
     size <- file.info(file)$size
     adat <- readBin(con = file, what= "raw", n = ttsize,)
     separator <- which(adat == "ff")
     separator.diff <- diff(separator)
-    if(type == "prec") {
-        if(separator.diff[1] == 3) {
+    separator.loc <- which(separator.diff == 3)
+    precip.end <- separator.loc[1]
+    kezddate <- adat[(separator[precip.end]+4):(separator[precip.end]+6)]
+    if(type[1] == "prec") {
+        if(precip.end == 1) {
             stop("No rain registered!")
         }
-        csadat <- adat[(separator[1]+1):(separator[2]-1)]
-        kezddate <- adat[(separator[3]+1):(separator[3]+3)]
-        min <- csadat[seq(4,length(csadat)-1,2)]
-        sec <- csadat[seq(5,length(csadat),2)]
-        result <- paste0("20",kezddate[1], "-", csadat[1], "-", csadat[2], " ",
-               csadat[3], ":", min, ":", sec)
+        prec.newdate <- separator[1:(precip.end-1)]
+        prec.month <- adat[prec.newdate+1]
+        prec.day <- adat[prec.newdate+2]
+        prec.hour <- adat[prec.newdate+3]
+        prec.hourlydate <- paste0(dateyearhundred,kezddate[1], "-",
+                                  prec.month, "-",
+                                  prec.day, " ",
+                                  prec.hour)
+        ## Each tip determination
+        first.tip.in.hour <- (prec.newdate + 4)
+        end.tip.in.hour <- c(prec.newdate[-1], separator[precip.end])
+        repeat.to.tips <- (end.tip.in.hour - first.tip.in.hour)/2
+
+        prec.hourlydate.full <- rep(prec.hourlydate, repeat.to.tips)
+
+        tip.index <- seq(first.tip.in.hour[1], by = 2, length.out = repeat.to.tips[1])
+        if(length(first.tip.in.hour) > 1) {
+            for(curr.date in 2:length(first.tip.in.hour)) {
+                tip.index <- c(tip.index,
+                               seq(first.tip.in.hour[curr.date],
+                                   by = 2,
+                                   length.out = repeat.to.tips[curr.date]
+                                   )
+                               )
+            }
+        }
+        prec.min <- adat[tip.index]
+        prec.sec <- adat[tip.index+1]
+        result <- paste0(prec.hourlydate.full, ":", prec.min, ":", prec.sec)
     }
     else {
         temp.matrix <- matrix(strtoi(x = ttadat[8:25], base = 16L),
