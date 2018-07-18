@@ -15,7 +15,7 @@ hhm.readout <- function(file, type = c("prec", "temp")) {
                csadat[3], ":", min, ":", sec)
     }
     else {
-        temp.matrix <- matrix(strtoi(paste0("0x",ttadat[8:25])),
+        temp.matrix <- matrix(strtoi(x = ttadat[8:25], base = 16L),
                               ncol = 3, byrow = TRUE)
         if(any(temp.matrix[,2] > 0)) {
             to.first <- bitwAnd(temp.matrix[,2], 15)*256
