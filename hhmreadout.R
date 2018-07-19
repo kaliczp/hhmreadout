@@ -1,6 +1,7 @@
 hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
+    ## Determination of size in bytes
     size <- file.info(file)$size
-    adat <- readBin(con = file, what= "raw", n = ttsize,)
+    adat <- readBin(con = file, what= "raw", n = size,)
     separator <- which(adat == "ff")
     separator.diff <- diff(separator)
     separator.loc <- which(separator.diff == 3)
@@ -41,7 +42,7 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         result <- paste0(prec.hourlydate.full, ":", prec.min, ":", prec.sec)
     }
     else {
-        temp.matrix <- matrix(strtoi(x = ttadat[8:25], base = 16L),
+        temp.matrix <- matrix(strtoi(x = adat[8:25], base = 16L),
                               ncol = 3, byrow = TRUE)
         if(any(temp.matrix[,2] > 0)) {
             to.first <- bitwAnd(temp.matrix[,2], 15)*256
