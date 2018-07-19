@@ -73,7 +73,8 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
                 temp.matrix[,3] <- temp.matrix[,1] - 4096
                 }
         }
-        result <- as.vector(t(temp.matrix[,c(1,3)]) / 10)
+        corrected.temp.vector <- as.vector(t(temp.matrix[,c(1,3)]) / 10)
+        result <- matrix(corrected.temp.vector, ncol=28, byrow=T)[,1:12]
     }
     result
 }
