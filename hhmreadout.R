@@ -42,8 +42,9 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         result <- paste0(prec.hourlydate.full, ":", prec.min, ":", prec.sec)
     }
     else {
-        temp.matrix <- matrix(strtoi(x = adat[(precip.end+4):(precip.end+24)], base = 16L),
+        temp.matrix <- matrix(strtoi(x = adat[(precip.end+7):(precip.end+24)], base = 16L),
                               ncol = 3, byrow = TRUE)
+        ## Restore 12 bit integers
         if(any(temp.matrix[,2] > 0)) {
             to.first <- bitwAnd(temp.matrix[,2], 15)*256
             to.third <- bitwAnd(temp.matrix[,2], 240)/16*256
@@ -56,7 +57,7 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
                 temp.matrix[,3] <- temp.matrix[,1] - 4096
                 }
         }
-        result <- temp.matrix[,c(1,3)] / 10
+        result <- as.vector(t(temp.matrix[,c(1,3)]) / 10)
     }
     result
 }
