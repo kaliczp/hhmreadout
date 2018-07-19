@@ -43,10 +43,10 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
     }
     else {
         day.begin <- separator[separator.loc]+4
-        day.date <- character(length(day.begin))
+        day.date <- character()
         adat.tempvector <- numeric()
         for(akt.day in 1:length(day.begin)) {
-            day.date[akt.day] <- paste(paste0(dateyearhundred,
+            akt.day.date <- paste(paste0(dateyearhundred,
                                               adat[day.begin[akt.day]]),
                                        adat[day.begin[akt.day]+1],
                                        adat[day.begin[akt.day]+2],
@@ -55,6 +55,16 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
             last.temp <- ifelse(test = akt.day < length(day.begin),
                                 yes = day.begin[akt.day + 1]-5,
                                 no = size)
+            hours.in.day <- (last.temp-first.temp+1)/ 42 # 42 data/day
+            current.dates <- rep(akt.day.date,hours.in.day)
+            if(akt.day == 1) {
+                current.dates <- paste(current.dates,
+                                       paste((24-hours.in.day):23,"00",sep=":"))
+            } else {
+                current.dates <- paste(current.dates,
+                                       paste(0:(hours.in.day-1),"00",sep=":"))
+            }
+            day.date <- c(day.date, current.dates)
             adat.tempvector <- c(adat.tempvector,
                 first.temp:last.temp)
         }
@@ -74,7 +84,8 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
                 }
         }
         corrected.temp.vector <- as.vector(t(temp.matrix[,c(1,3)]) / 10)
-        result <- matrix(corrected.temp.vector, ncol=28, byrow=T)[,1:12]
+        onlytemp.matrix <- matrix(corrected.temp.vector, ncol=28, byrow=T)[,1:12]
+        result <- cbind(day.date, as.data.frame(onlytemp.matrix))
     }
     result
 }
