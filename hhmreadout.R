@@ -42,6 +42,15 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         result <- paste0(prec.hourlydate.full, ":", prec.min, ":", prec.sec)
     }
     else {
+        day.begin <- separator[separator.loc]+4
+        day.date <- character(length(day.begin))
+        for(akt.day in 1:length(day.begin)) {
+            day.date[akt.day] <- paste(paste0(dateyearhundred,
+                                              adat[day.begin[akt.day]]),
+                                       adat[day.begin[akt.day]+1],
+                                       adat[day.begin[akt.day]+2],
+                                       sep="-")
+        }
         temp.matrix <- matrix(strtoi(x = adat[(precip.end+7):(precip.end+24)], base = 16L),
                               ncol = 3, byrow = TRUE)
         ## Restore 12 bit integers
