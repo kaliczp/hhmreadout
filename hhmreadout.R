@@ -5,8 +5,8 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
     separator <- which(adat == "ff")
     separator.diff <- diff(separator)
     separator.loc <- which(separator.diff == 3)
-    precip.end <- separator.loc[1]
-    kezddate <- adat[(separator[precip.end]+4):(separator[precip.end]+6)]
+    precip.end <- separator[separator.loc[1]]
+    kezddate <- adat[(precip.end+4):(precip.end+6)]
     if(type[1] == "prec") {
         if(precip.end == 1) {
             stop("No rain registered!")
@@ -21,7 +21,7 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
                                   prec.hour)
         ## Each tip determination
         first.tip.in.hour <- (prec.newdate + 4)
-        end.tip.in.hour <- c(prec.newdate[-1], separator[precip.end])
+        end.tip.in.hour <- c(prec.newdate[-1], precip.end)
         repeat.to.tips <- (end.tip.in.hour - first.tip.in.hour)/2
 
         prec.hourlydate.full <- rep(prec.hourlydate, repeat.to.tips)
