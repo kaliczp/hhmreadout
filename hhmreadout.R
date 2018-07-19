@@ -11,7 +11,7 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         if(precip.end == 1) {
             stop("No rain registered!")
         }
-        prec.newdate <- separator[1:(precip.end-1)]
+        prec.newdate <- separator[1:(separator.loc[1]-1)]
         prec.month <- adat[prec.newdate+1]
         prec.day <- adat[prec.newdate+2]
         prec.hour <- adat[prec.newdate+3]
