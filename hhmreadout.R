@@ -43,6 +43,13 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
     }
     else {
         day.begin <- separator[separator.loc]+4
+        full.day.length <- diff(day.begin[-1])
+        if(any(full.day.length < 1015)) {
+            wrong.separators <- which(full.day.length < 1015)
+            wrong.sep.idx <- seq(2,length(wrong.separators),by=2)
+            wrong.day.idx <- wrong.separators[wrong.sep.idx]+1
+            day.begin <- day.begin[-wrong.day.idx]
+        }
         day.date <- character()
         adat.tempvector <- numeric()
         for(akt.day in 1:length(day.begin)) {
