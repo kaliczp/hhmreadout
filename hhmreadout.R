@@ -2,7 +2,10 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
     ## Determination of size in bytes
     size <- file.info(file)$size
     adat <- readBin(con = file, what= "raw", n = size,)
+    ## Search for "ff" separator byte.
     separator <- which(adat == "ff")
+    ## Between precipitation and temperature "ff 00 00 ff" is the separator
+    ## followed by the %y %m %d date and the 1 hour temperature.
     separator.diff <- diff(separator)
     separator.loc <- which(separator.diff == 3)
     precip.end <- separator[separator.loc[1]]
@@ -42,7 +45,9 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         result <- paste0(prec.hourlydate.full, ":", prec.min, ":", prec.sec)
     }
     else {
+        ## New days begin with "ff 00 00 ff" in temperature series
         day.begin <- separator[separator.loc]+4
+        ## Look after any trouble. What is the case with leap days?
         full.day.length <- diff(day.begin[-1])
         if(any(full.day.length < 1015)) {
             wrong.separators <- which(full.day.length < 1015)
@@ -50,18 +55,22 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
             wrong.day.idx <- wrong.separators[wrong.sep.idx]+1
             day.begin <- day.begin[-wrong.day.idx]
         }
+        ## Date-time generation
         day.date <- character()
         adat.tempvector <- numeric()
         for(akt.day in 1:length(day.begin)) {
+            ## Date generation for current day
             akt.day.date <- paste(paste0(dateyearhundred,
                                               adat[day.begin[akt.day]]),
                                        adat[day.begin[akt.day]+1],
                                        adat[day.begin[akt.day]+2],
-                                       sep="-")
+                                  sep="-")
+            ## First and last data index
             first.temp <- day.begin[akt.day]+3
             last.temp <- ifelse(test = akt.day < length(day.begin),
                                 yes = day.begin[akt.day + 1]-5,
                                 no = size)
+            ## Length of the day
             hours.in.day <- (last.temp-first.temp+1)/ 42 # 42 data/day
             current.dates <- rep(akt.day.date,hours.in.day)
             if(akt.day == 1) {
@@ -75,6 +84,7 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
             adat.tempvector <- c(adat.tempvector,
                 first.temp:last.temp)
         }
+        ## Work with temp data
         temp.vector <- strtoi(x = adat[adat.tempvector], base = 16L)
         temp.matrix <- matrix(temp.vector, ncol = 3, byrow = TRUE)
         ## Restore 12 bit integers
@@ -90,6 +100,7 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
                 temp.matrix[,3] <- temp.matrix[,1] - 4096
                 }
         }
+        ## Drop the middle column (fractional bits)
         corrected.temp.vector <- as.vector(t(temp.matrix[,c(1,3)]) / 10)
         onlytemp.matrix <- matrix(corrected.temp.vector, ncol=28, byrow=T)[,1:12]
         result <- cbind(day.date, as.data.frame(onlytemp.matrix))
