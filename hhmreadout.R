@@ -12,8 +12,9 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
     kezddate <- adat[(precip.end+4):(precip.end+6)]
     if(type[1] == "prec") {
         if(precip.end == 1) {
-            stop("No rain registered!")
-        }
+            result <- numeric()
+            warning("No rain registered!")
+        } else {
         prec.newdate <- separator[1:(separator.loc[1]-1)]
         prec.month <- adat[prec.newdate+1]
         prec.day <- adat[prec.newdate+2]
@@ -43,6 +44,7 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         prec.min <- adat[tip.index]
         prec.sec <- adat[tip.index+1]
         result <- paste0(prec.hourlydate.full, ":", prec.min, ":", prec.sec)
+        }
     }
     else {
         ## New days begin with "ff 00 00 ff" in temperature series
