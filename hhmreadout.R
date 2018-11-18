@@ -70,6 +70,7 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         notemp.diff <- diff(c(notemp.idx,size+1))
         temp.daily.length <- notemp.diff[notemp.diff > 1] - 1
         temp.daily.hours <- temp.daily.length / 42
+        ## Correction for hourly sleep
         temp.daily.hours[1] <- temp.daily.hours[1] -1
         temp.daily.hours[length(temp.daily.hours)] <- temp.daily.hours[length(temp.daily.hours)] +1
         ## Date-time generation
@@ -104,8 +105,9 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         }
         ## Drop the middle column (fractional bits)
         corrected.temp.vector <- as.vector(t(temp.matrix[,c(1,3)]) / 10)
-        onlytemp.matrix <- matrix(corrected.temp.vector, ncol=28, byrow=T)[,1:12]
-        result <- cbind(datetime.vec, as.data.frame(onlytemp.matrix))
+        onlytemp.matrix <- matrix(corrected.temp.vector, ncol=28, byrow=T)
+        onlytemp.df <- as.data.frame(onlytemp.matrix)[,1:12]
+        result <- cbind(datetime.vec, onlytemp.df)
     }
     result
 }
