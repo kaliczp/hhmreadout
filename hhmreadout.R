@@ -43,7 +43,8 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         }
         prec.min <- adat[tip.index]
         prec.sec <- adat[tip.index+1]
-        result <- paste0(prec.hourlydate.full, ":", prec.min, ":", prec.sec)
+        precchartime <- paste0(prec.hourlydate.full, ":", prec.min, ":", prec.sec)
+        result <- as.POSIXct(precchartime)
         }
     }
     else {
