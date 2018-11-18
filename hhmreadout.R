@@ -46,46 +46,48 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
     }
     else {
         ## New days begin with "ff 00 00 ff" in temperature series
-        day.begin <- separator[separator.loc]+4
-        ## Look after any trouble. What is the case with leap days?
-        full.day.length <- diff(day.begin[-1])
-        if(any(full.day.length < 1015)) {
-            wrong.separators <- which(full.day.length < 1015)
-            wrong.sep.idx <- seq(2,length(wrong.separators),by=2)
-            wrong.day.idx <- wrong.separators[wrong.sep.idx]+1
-            day.begin <- day.begin[-wrong.day.idx]
+        newday.begin <- separator[separator.loc]
+        day.and.separator.idx <- rep(newday.begin,each = 7) + 0:6
+        day.and.separator <- matrix(adat[day.and.separator.idx], ncol=7, byrow=TRUE)
+        day.and.separator.idx.mat <- matrix(day.and.separator.idx,
+                                            ncol=7, byrow=TRUE)
+        ## If separators are wrongly catched then the middle columns are not zeroes
+        if(sum(as.numeric(day.and.separator[,2:3])) != 0) {
+            ## First four column test of day.and.separator
+            day.sep.first <- as.numeric(day.and.separator[,2]) != 0
+            day.sep.second <- as.numeric(day.and.separator[,3]) != 0
+            nodays.idx <- !(day.sep.first | day.sep.second)
+            day.and.separator <- day.and.separator[nodays.idx,]
+            day.and.separator.idx.mat <- day.and.separator.idx.mat[nodays.idx,]
+            day.and.separator.idx <- as.numeric(t(day.and.separator.idx.mat))
         }
+        ## If was no precipitation then no problem if it was some additional indexes
+        if(precip.end == 1) {
+            notemp.idx <- day.and.separator.idx
+        } else {
+            notemp.idx <- c(1:(precip.end-1), day.and.separator.idx)
+        }
+        notemp.diff <- diff(c(notemp.idx,size+1))
+        temp.daily.length <- notemp.diff[notemp.diff > 1] - 1
+        temp.daily.hours <- temp.daily.length / 42
+        temp.daily.hours[1] <- temp.daily.hours[1] -1
+        temp.daily.hours[length(temp.daily.hours)] <- temp.daily.hours[length(temp.daily.hours)] +1
         ## Date-time generation
-        day.date <- character()
-        adat.tempvector <- numeric()
-        for(akt.day in 1:length(day.begin)) {
-            ## Date generation for current day
-            akt.day.date <- paste(paste0(dateyearhundred,
-                                              adat[day.begin[akt.day]]),
-                                       adat[day.begin[akt.day]+1],
-                                       adat[day.begin[akt.day]+2],
-                                  sep="-")
-            ## First and last data index
-            first.temp <- day.begin[akt.day]+3
-            last.temp <- ifelse(test = akt.day < length(day.begin),
-                                yes = day.begin[akt.day + 1]-5,
-                                no = size)
-            ## Length of the day
-            hours.in.day <- (last.temp-first.temp+1)/ 42 # 42 data/day
-            current.dates <- rep(akt.day.date,hours.in.day)
-            if(akt.day == 1) {
-                current.dates <- paste(current.dates,
-                                       paste((24-hours.in.day):23,"00",sep=":"))
-            } else {
-                current.dates <- paste(current.dates,
-                                       paste(0:(hours.in.day-1),"00",sep=":"))
-            }
-            day.date <- c(day.date, current.dates)
-            adat.tempvector <- c(adat.tempvector,
-                first.temp:last.temp)
-        }
+        yeartens.vec <- as.character(day.and.separator[, 5])
+        year.vec <- paste0(dateyearhundred,yeartens.vec)
+        month.vec <- as.character(day.and.separator[, 6])
+        day.vec <- as.character(day.and.separator[, 7])
+        current.date <- paste(year.vec, month.vec, day.vec, sep = "-")
+
+        generic.time <- paste(0:23,"00",sep=":")
+        datetime.char.vec <- paste(rep(current.date, each=24), generic.time)
+        datetime.full.vec <- as.POSIXct(datetime.char.vec)
+        first.valid.date <- 24-temp.daily.hours[1]+1
+        datetime.startok.vec <- datetime.full.vec[first.valid.date:length(datetime.full.vec)]
+        datetime.vec <- datetime.startok.vec[1:sum(temp.daily.hours)]
+
         ## Work with temp data
-        temp.vector <- strtoi(x = adat[adat.tempvector], base = 16L)
+        temp.vector <- strtoi(x = adat[-notemp.idx], base = 16L)
         temp.matrix <- matrix(temp.vector, ncol = 3, byrow = TRUE)
         ## Restore 12 bit integers
         if(any(temp.matrix[,2] > 0)) {
@@ -103,7 +105,7 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         ## Drop the middle column (fractional bits)
         corrected.temp.vector <- as.vector(t(temp.matrix[,c(1,3)]) / 10)
         onlytemp.matrix <- matrix(corrected.temp.vector, ncol=28, byrow=T)[,1:12]
-        result <- cbind(day.date, as.data.frame(onlytemp.matrix))
+        result <- cbind(datetime.vec, as.data.frame(onlytemp.matrix))
     }
     result
 }
