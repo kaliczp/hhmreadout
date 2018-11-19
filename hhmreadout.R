@@ -94,16 +94,16 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
         temp.vector <- strtoi(x = adat[-notemp.idx], base = 16L)
         temp.matrix <- matrix(temp.vector, ncol = 3, byrow = TRUE)
         ## Restore 12 bit integers
+        ## If something larger (smaller) than 8 bits
         if(any(temp.matrix[,2] > 0)) {
             to.first <- bitwAnd(temp.matrix[,2], 15)*256
             to.third <- bitwAnd(temp.matrix[,2], 240)/16*256
             temp.matrix[,1] = temp.matrix[,1] + to.first
             temp.matrix[,3] = temp.matrix[,3] + to.third
-            if(any(temp.matrix[,1] > 2048)) {
-                temp.matrix[,1] <- temp.matrix[,1] - 4096
-                }
-            if(any(temp.matrix[,3] > 2048)) {
-                temp.matrix[,3] <- temp.matrix[,1] - 4096
+            ## Decode negative numbers if necessary
+            if(any(temp.matrix > 2048)) {
+                negative.temps.idx <- which(temp.matrix > 2048)
+                temp.matrix[negative.temps.idx] <- temp.matrix[negative.temps.idx]- 4096
                 }
         }
         ## Drop the middle column (fractional bits)
