@@ -16,10 +16,19 @@ hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
             warning("No rain registered!")
         } else {
         prec.newdate <- separator[1:(separator.loc[1]-1)]
-        prec.month <- adat[prec.newdate+1]
+        num.newdate <- length(prec.newdate)
+        prec.month <- as.character(adat[prec.newdate+1])
+        ## Year generation
+        first.year <- as.numeric(as.character(kezddate[1]))
+        ## if need correction around New Year's Day
+        if(prec.month[1] == "12" & prec.month[num.newdate] == "01") {
+            prec.yeartens <- ifelse(prec.month == "01", first.year + 1, first.year)
+        } else {
+            prec.yeartens <- rep(first.year, times = num.newdate)
+        }
         prec.day <- adat[prec.newdate+2]
         prec.hour <- adat[prec.newdate+3]
-        prec.hourlydate <- paste0(dateyearhundred,kezddate[1], "-",
+        prec.hourlydate <- paste0(dateyearhundred, prec.yeartens, "-",
                                   prec.month, "-",
                                   prec.day, " ",
                                   prec.hour)
