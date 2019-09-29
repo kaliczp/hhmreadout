@@ -1,9 +1,7 @@
 hhm.readout <- function(file, type = c("prec", "temp"), dateyearhundred = 20) {
     ## Determination of size in bytes
     size <- file.info(file)$size
-    if(size == 0) {
-        stop("No data in file!")
-    }
+    stopifnot(size > 0) ## check case of empty file
     adat <- readBin(con = file, what= "raw", n = size,)
     ## Search for "ff" separator byte.
     separator <- which(adat == "ff")
